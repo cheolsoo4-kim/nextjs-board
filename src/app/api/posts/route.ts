@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
         id: posts.id,
         title: posts.title,
         content: posts.content,
-        authorName: posts.authorName,
+        author: posts.author,
         isGuest: posts.isGuest,
         views: posts.views,
         createdAt: posts.createdAt,
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, content, boardId, authorName, isGuest } = await request.json()
+    const { title, content, boardId, author, isGuest } = await request.json()
     
     if (!isGuest) {
       const user = await getUserFromToken(request)
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       content,
       boardId: parseInt(boardId),
       authorId: user?.id || null,
-      authorName: authorName || user?.name || '익명',
+      author: author || user?.name || '익명',
       isGuest: isGuest || false,
     }).returning()
 
