@@ -12,7 +12,7 @@ async function getPost(id: number) {
       id: posts.id,
       title: posts.title,
       content: posts.content,
-      authorName: posts.authorName,
+      author: posts.author,
       authorId: posts.authorId,
       isGuest: posts.isGuest,
       views: posts.views,

@@ -46,7 +46,7 @@ export const comments = pgTable('comments', {
   content: text('content').notNull(),
   postId: integer('post_id').references(() => posts.id).notNull(),
   authorId: integer('author_id').references(() => users.id),
-  authorName: varchar('author_name', { length: 100 }).notNull(),
+  author: varchar('author_name', { length: 100 }).notNull(),
   isGuest: boolean('is_guest').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

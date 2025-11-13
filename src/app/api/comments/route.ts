@@ -5,7 +5,7 @@ import { getUserFromToken } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const { postId, content, authorName, isGuest } = await request.json()
+    const { postId, content, author, isGuest } = await request.json()
     
     if (!content?.trim()) {
       return NextResponse.json({ error: '댓글 내용을 입력해주세요.' }, { status: 400 })
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (isGuest && !authorName?.trim()) {
+    if (isGuest && !author?.trim()) {
       return NextResponse.json({ error: '이름을 입력해주세요.' }, { status: 400 })
     }
 
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       postId: parseInt(postId),
       content: content.trim(),
       authorId: userInfo?.id || null,
-      authorName: authorName?.trim() || userInfo?.name || '익명',
+      author: author?.trim() || userInfo?.name || '익명',
       isGuest: isGuest || false,
     }).returning()
 

@@ -144,7 +144,7 @@ export default function AdminStats() {
               <div key={post.id} className="border-b border-gray-100 pb-3 last:border-b-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{post.title}</p>
                 <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs text-gray-500">{post.authorName}</p>
+                  <p className="text-xs text-gray-500">{post.author}</p>
                   <p className="text-xs text-gray-500">
                     {formatDistanceToNow(new Date(post.createdAt), { locale: ko, addSuffix: true })}
                   </p>

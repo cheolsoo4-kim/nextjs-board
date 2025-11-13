@@ -10,7 +10,7 @@ interface Post {
   id: number
   title: string
   content: string
-  authorName: string
+  author: string
   authorId?: number
   isGuest: boolean
   views: number
@@ -46,7 +46,7 @@ export default function PostContent({ post }: PostContentProps) {
 <div className="flex items-center justify-between text-sm text-gray-500">
           <div className="flex items-center space-x-4">
             <span className="flex items-center">
-              {post.isGuest ? '👤' : '👨‍💼'} {post.authorName}
+              {post.isGuest ? '👤' : '👨‍💼'} {post.author}
             </span>
             <span>👀 {post.views}</span>
             <span>

@@ -9,7 +9,7 @@ import { ko } from 'date-fns/locale'
 interface Comment {
   id: number
   content: string
-  authorName: string
+  author: string
   authorId?: number
   isGuest: boolean
   createdAt: string
@@ -30,7 +30,7 @@ interface CommentSectionProps {
 export default function CommentSection({ post, initialComments }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>(initialComments)
   const [newComment, setNewComment] = useState('')
-  const [authorName, setAuthorName] = useState('')
+  const [author, setauthor] = useState('')
   const [user, setUser] = useState<any>(null)
   const [isGuest, setIsGuest] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -46,7 +46,7 @@ export default function CommentSection({ post, initialComments }: CommentSection
       if (response.ok) {
         const userData = await response.json()
         setUser(userData)
-        setAuthorName(userData.name)
+        setauthor(userData.name)
       } else {
         setIsGuest(true)
       }
@@ -62,7 +62,7 @@ export default function CommentSection({ post, initialComments }: CommentSection
       return
     }
 
-    if (isGuest && !authorName.trim()) {
+    if (isGuest && !author.trim()) {
       setError('이름을 입력해주세요.')
       return
     }
@@ -77,7 +77,7 @@ export default function CommentSection({ post, initialComments }: CommentSection
         body: JSON.stringify({
           postId: post.id,
           content: newComment.trim(),
-          authorName: authorName.trim(),
+          author: author.trim(),
           isGuest
         }),
       })
@@ -128,8 +128,8 @@ export default function CommentSection({ post, initialComments }: CommentSection
 
         {isGuest && (
           <Input
-            value={authorName}
-            onChange={(e) => setAuthorName(e.target.value)}
+            value={author}
+            onChange={(e) => setauthor(e.target.value)}
             placeholder="이름을 입력해주세요"
             required
           />
@@ -165,7 +165,7 @@ function CommentList({ comments }: { comments: Comment[] }) {
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center space-x-2">
               <span className="font-medium text-gray-900">
-                {comment.isGuest ? '👤' : '👨‍💼'} {comment.authorName}
+                {comment.isGuest ? '👤' : '👨‍💼'} {comment.author}
               </span>
               {comment.isGuest && (
                 <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
