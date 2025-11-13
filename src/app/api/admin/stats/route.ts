@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const recentPosts = await db.select({
       id: posts.id,
       title: posts.title,
-      authorName: posts.authorName,
+      author: posts.author,
       createdAt: posts.createdAt,
     }).from(posts).orderBy(desc(posts.createdAt)).limit(5)
 
