@@ -1,6 +1,14 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": ".next",
+  "devCommand": "npm run dev",
   "framework": "nextjs",
-  "regions": ["icn1"]
+  "regions": ["icn1"],
+  "env": {
+    "DATABASE_URL": "@postgresql://neondb_owner:npg_Xd82rKvTMChg@ep-divine-bread-ad7tqb6j-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+  },
+  "build": {
+    "env": {
+      "DATABASE_URL": "@postgresql://neondb_owner:npg_Xd82rKvTMChg@ep-divine-bread-ad7tqb6j-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    }
+  }
 }
