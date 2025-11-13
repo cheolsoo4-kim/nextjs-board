@@ -1,110 +1,93 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { posts, boards, users } from '@/lib/schema'
-import { eq, sql } from 'drizzle-orm'
+import { getUserFromToken } from '@/lib/auth'
+import { eq, desc } from 'drizzle-orm'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// params를 사용하지 않음 (동적 라우트가 아니므로)
+export async function GET(request: NextRequest) {
   try {
-    const { id } = await params
-    const postId = parseInt(id)
+    const { searchParams } = new URL(request.url)
+    const boardId = searchParams.get('boardId')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const offset = (page - 1) * limit
 
-    // 1. 조회수 증가
-    await db
-      .update(posts)
-      .set({ 
-        views: sql`${posts.views} + 1` 
-      })
-      .where(eq(posts.id, postId))
+    // 공통 SELECT 구조
+    const selectFields = {
+      id: posts.id,
+      title: posts.title,
+      content: posts.content,
+      author: posts.author,
+      isGuest: posts.isGuest,
+      views: posts.views,
+      createdAt: posts.createdAt,
+      board: {
+        id: boards.id,
+        title: boards.title,
+      }
+    }
 
-    // 2. 게시글 정보 조회
-    const [post] = await db
-      .select({
-        id: posts.id,
-        title: posts.title,
-        content: posts.content,
-        author: posts.author,
-        authorId: posts.authorId,
-        isGuest: posts.isGuest,
-        views: posts.views,
-        createdAt: posts.createdAt,
-        updatedAt: posts.updatedAt,
-        board: {
-          id: boards.id,
-          title: boards.title,
-        },
-      })
-      .from(posts)
-      .leftJoin(boards, eq(posts.boardId, boards.id))
-      .where(eq(posts.id, postId))
-      .limit(1)
+    // boardId 여부에 따라 다른 쿼리 실행
+    let postList
 
-    if (!post) {
+    if (boardId) {
+      postList = await db
+        .select(selectFields)
+        .from(posts)
+        .leftJoin(boards, eq(posts.boardId, boards.id))
+        .where(eq(posts.boardId, parseInt(boardId)))
+        .orderBy(desc(posts.createdAt))
+        .limit(limit)
+        .offset(offset)
+    } else {
+      postList = await db
+        .select(selectFields)
+        .from(posts)
+        .leftJoin(boards, eq(posts.boardId, boards.id))
+        .orderBy(desc(posts.createdAt))
+        .limit(limit)
+        .offset(offset)
+    }
+
+    return NextResponse.json(postList)
+  } catch (error) {
+    console.error('Posts fetch error:', error)
+    return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { title, content, boardId, author, isGuest } = await request.json()
+    
+    // 입력 값 검증
+    if (!title || !content || !boardId) {
       return NextResponse.json(
-        { error: '게시글을 찾을 수 없습니다.' },
-        { status: 404 }
+        { error: '필수 항목을 입력해주세요.' }, 
+        { status: 400 }
       )
     }
 
-    return NextResponse.json(post)
+    // 사용자 인증 처리
+    const user = await getUserFromToken(request)
+    
+    if (!isGuest && !user) {
+      return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+    }
+    
+    const [newPost] = await db.insert(posts).values({
+      title,
+      content,
+      boardId: parseInt(boardId),
+      authorId: user?.id || null,
+      author: author || user?.name || '익명',
+      isGuest: isGuest || false,
+    }).returning()
+
+    return NextResponse.json(newPost, { status: 201 })
   } catch (error) {
-    console.error('Post fetch error:', error)
-    return NextResponse.json(
-      { error: '서버 오류가 발생했습니다.' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
-    const postId = parseInt(id)
-    const { title, content } = await request.json()
-
-    const [updatedPost] = await db
-      .update(posts)
-      .set({
-        title,
-        content,
-        updatedAt: new Date(),
-      })
-      .where(eq(posts.id, postId))
-      .returning()
-
-    return NextResponse.json(updatedPost)
-  } catch (error) {
-    console.error('Post update error:', error)
-    return NextResponse.json(
-      { error: '서버 오류가 발생했습니다.' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
-    const postId = parseInt(id)
-
-    await db
-      .delete(posts)
-      .where(eq(posts.id, postId))
-
-    return NextResponse.json({ message: '게시글이 삭제되었습니다.' })
-  } catch (error) {
-    console.error('Post delete error:', error)
-    return NextResponse.json(
-      { error: '서버 오류가 발생했습니다.' },
-      { status: 500 }
-    )
+    console.error('Post creation error:', error)
+    return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 })
   }
 }
