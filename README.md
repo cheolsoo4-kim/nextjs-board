@@ -3,26 +3,26 @@
 Next.js 16 + App Router를 사용한 게시판/블로그 시스템의 프로젝트 구조입니다.
 
 ## 📁 프로젝트 구조
-├── app/
-│ ├── admin/
-│ ├── api/
-│ ├── auth/
-│ ├── boards/
-│ ├── posts/
-│ ├── guestbook/
-│ ├── todos/
-│ ├── layout.tsx
-│ ├── page.tsx
-│ ├── globals.css
-│ └── favicon.ico
-├── components/
-│ ├── admin/
-│ ├── ui/
-│ └── *.tsx
-└── lib/
-├── auth.ts
-├── db.ts
-└── schema.ts
+├── app/\n
+│ ├── admin/\n
+│ ├── api/\n
+│ ├── auth/\n
+│ ├── boards/\n
+│ ├── posts/\n
+│ ├── guestbook/\n
+│ ├── todos/\n
+│ ├── layout.tsx\n
+│ ├── page.tsx\n
+│ ├── globals.css\n
+│ └── favicon.ico\n
+├── components/\n
+│ ├── admin/\n
+│ ├── ui/\n
+│ └── *.tsx\n
+└── lib/\n
+├── auth.ts\n
+├── db.ts\n
+└── schema.ts\n
 
 
 ## 🔧 App Directory (Next.js App Router)
