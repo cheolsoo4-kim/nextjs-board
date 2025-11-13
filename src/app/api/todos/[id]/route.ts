@@ -6,15 +6,16 @@ import { eq, and } from 'drizzle-orm'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
+
 ) {
   try {
     const user = await getUserFromToken(request)
     if (!user) {
       return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
     }
-
-    const todoId = parseInt(params.id)
+    const { id } = await params;
+    const todoId = parseInt(id)
     const { title, description, priority, dueDate, completed } = await request.json()
 
     const [updatedTodo] = await db
@@ -43,15 +44,15 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromToken(request)
     if (!user) {
       return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
     }
-
-    const todoId = parseInt(params.id)
+    const { id } = await params;
+    const todoId = parseInt(id)
 
     const [deletedTodo] = await db
       .delete(todos)
