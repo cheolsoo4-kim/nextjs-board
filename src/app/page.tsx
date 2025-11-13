@@ -1,3 +1,4 @@
+// src/app/page.tsx (기존 코드와 동일하지만 import 경로 확인)
 import Layout from '@/components/Layout'
 import Link from 'next/link'
 import { db } from '@/lib/db'
@@ -5,29 +6,39 @@ import { posts, boards, guestbook } from '@/lib/schema'
 import { desc, eq } from 'drizzle-orm'
 
 async function getRecentPosts() {
-  return await db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      author: posts.author,
-      createdAt: posts.createdAt,
-      board: {
-        title: boards.title,
-      }
-    })
-    .from(posts)
-    .leftJoin(boards, eq(posts.boardId, boards.id))
-    .orderBy(desc(posts.createdAt))
-    .limit(5)
+  try {
+    return await db
+      .select({
+        id: posts.id,
+        title: posts.title,
+        author: posts.author,
+        createdAt: posts.createdAt,
+        board: {
+          title: boards.title,
+        }
+      })
+      .from(posts)
+      .leftJoin(boards, eq(posts.boardId, boards.id))
+      .orderBy(desc(posts.createdAt))
+      .limit(5)
+  } catch (error) {
+    console.error('최근 게시글 조회 실패:', error)
+    return []
+  }
 }
 
 async function getRecentGuestbook() {
-  return await db
-    .select()
-    .from(guestbook)
-    .where(eq(guestbook.isApproved, true))
-    .orderBy(desc(guestbook.createdAt))
-    .limit(3)
+  try {
+    return await db
+      .select()
+      .from(guestbook)
+      .where(eq(guestbook.isApproved, true))
+      .orderBy(desc(guestbook.createdAt))
+      .limit(3)
+  } catch (error) {
+    console.error('최근 방명록 조회 실패:', error)
+    return []
+  }
 }
 
 export default async function HomePage() {
