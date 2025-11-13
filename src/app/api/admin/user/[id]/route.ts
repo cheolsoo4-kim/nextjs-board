@@ -6,15 +6,16 @@ import { eq } from 'drizzle-orm'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }  // ✅ Promise로 변경
+
 ) {
   try {
     const user = await getUserFromToken(request)
     if (!user || user.role !== 'admin') {
       return NextResponse.json({ error: '관리자 권한이 필요합니다.' }, { status: 403 })
     }
-
-    const userId = parseInt(params.id)
+     const { id } = await params;
+    const userId = parseInt(id)
     const { name, email, role, isActive } = await request.json()
 
     const [updatedUser] = await db
@@ -49,15 +50,16 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }  // ✅ Promise로 변경
+
 ) {
   try {
     const user = await getUserFromToken(request)
     if (!user || user.role !== 'admin') {
       return NextResponse.json({ error: '관리자 권한이 필요합니다.' }, { status: 403 })
     }
-
-    const userId = parseInt(params.id)
+      const { id } = await params;  // ✅ await 추가
+    const userId = parseInt(id)
 
     // 자기 자신은 삭제할 수 없음
     if (user.id === userId) {
