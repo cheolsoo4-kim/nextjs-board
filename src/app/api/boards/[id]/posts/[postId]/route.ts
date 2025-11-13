@@ -83,7 +83,7 @@ export async function PUT(
       return NextResponse.json({ error: '게시글을 찾을 수 없습니다.' }, { status: 404 })
     }
 
-    // 게시글 수정 (author 또는 author_name 컬럼에 따라 수정)
+    // 게시글 수정 (author 또는 author 컬럼에 따라 수정)
     try {
       // 먼저 author 컬럼이 있는지 확인
       const columnExists = await sql`
@@ -106,7 +106,7 @@ export async function PUT(
           RETURNING *
         `
       } else {
-        // author_name 컬럼을 사용하는 경우
+        // author 컬럼을 사용하는 경우
         updatedPost = await sql`
           UPDATE posts 
           SET title = ${title.trim()}, 
