@@ -1,65 +1,152 @@
-import Image from "next/image";
+import Layout from '@/components/Layout'
+import Link from 'next/link'
+import { db } from '@/lib/db'
+import { posts, boards, guestbook } from '@/lib/schema'
+import { desc, eq } from 'drizzle-orm'
 
-export default function Home() {
+async function getRecentPosts() {
+  return await db
+    .select({
+      id: posts.id,
+      title: posts.title,
+      author: posts.author,
+      createdAt: posts.createdAt,
+      board: {
+        title: boards.title,
+      }
+    })
+    .from(posts)
+    .leftJoin(boards, eq(posts.boardId, boards.id))
+    .orderBy(desc(posts.createdAt))
+    .limit(5)
+}
+
+async function getRecentGuestbook() {
+  return await db
+    .select()
+    .from(guestbook)
+    .where(eq(guestbook.isApproved, true))
+    .orderBy(desc(guestbook.createdAt))
+    .limit(3)
+}
+
+export default async function HomePage() {
+  const [recentPosts, recentGuestbookEntries] = await Promise.all([
+    getRecentPosts(),
+    getRecentGuestbook(),
+  ])
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <Layout>
+      <div className="space-y-8">
+        {/* Hero Section */}
+        <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            환영합니다! 🎉
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+<p className="text-xl text-gray-600 mb-8">
+            게시판, 방명록, Todo 관리를 한 곳에서 편리하게 사용하세요.
           </p>
+          <div className="flex justify-center space-x-4">
+            <Link href="/boards" className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+              게시판 바로가기
+            </Link>
+            <Link href="/guestbook" className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
+              방명록 작성하기
+            </Link>
+          </div>
+</div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Recent Posts */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">최근 게시글</h2>
+<Link href="/boards" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                더보기 →
+              </Link>
+            </div>
+<div className="space-y-3">
+              {recentPosts.map((post) => (
+                <div key={post.id} className="border-b border-gray-100 pb-3 last:border-b-0">
+                  <Link href={`/posts/${post.id}`} className="block hover:bg-gray-50 p-2 rounded">
+                    <h3 className="font-medium text-gray-900 truncate">{post.title}</h3>
+<div className="flex items-center justify-between text-sm text-gray-500 mt-1">
+                      <span>{post.author}</span>
+                      <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    {post.board && (
+                      <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mt-1">
+                        {post.board.title}
+                      </span>
+                    )}
+                  </Link>
+                </div>
+              ))}
+              {recentPosts.length === 0 && (
+                <p className="text-gray-500 text-center py-4">아직 게시글이 없습니다.</p>
+              )}
+            </div>
+</div>
+
+          {/* Recent Guestbook */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">최근 방명록</h2>
+<Link href="/guestbook" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                더보기 →
+              </Link>
+            </div>
+<div className="space-y-3">
+              {recentGuestbookEntries.map((entry) => (
+                <div key={entry.id} className="border-b border-gray-100 pb-3 last:border-b-0">
+                  <div className="bg-gray-50 p-3 rounded">
+                    <p className="text-gray-800">{entry.message}</p>
+                    <div className="flex items-center justify-between text-sm text-gray-500 mt-2">
+                      <span>{entry.name}</span>
+                      <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
+                    </div>
+</div>
+                </div>
+              ))}
+              {recentGuestbookEntries.length === 0 && (
+                <p className="text-gray-500 text-center py-4">아직 방명록이 없습니다.</p>
+              )}
+            </div>
+</div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+
+        {/* Quick Links */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">바로가기</h2>
+<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Link href="/boards" className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
+                <span className="text-2xl">📝</span>
+              </div>
+<span className="text-sm font-medium text-gray-900">게시판</span>
+            </Link>
+            <Link href="/guestbook" className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-2">
+                <span className="text-2xl">📖</span>
+              </div>
+<span className="text-sm font-medium text-gray-900">방명록</span>
+            </Link>
+            <Link href="/todos" className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-2">
+                <span className="text-2xl">✅</span>
+              </div>
+<span className="text-sm font-medium text-gray-900">Todo</span>
+            </Link>
+            <Link href="/auth/login" className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-2">
+                <span className="text-2xl">👤</span>
+              </div>
+<span className="text-sm font-medium text-gray-900">로그인</span>
+            </Link>
+          </div>
+</div>
+      </div>
+</Layout>
+  )
 }
