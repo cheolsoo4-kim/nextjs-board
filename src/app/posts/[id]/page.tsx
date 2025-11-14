@@ -1,29 +1,21 @@
-// src/app/posts/[id]/page.tsx
 import Layout from '@/components/Layout'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { posts, boards } from '@/lib/schema'
-import { eq } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm' // sql import 추가
+import PostContent from '@/components/PostContent'
+import CommentSection from '@/components/CommentSection'
+// import PostActions from '@/components/PostActions'  // 아직 없다면 주석 처리
 
 // Server Action으로 분리
 async function incrementViewsAction(postId: number) {
   try {
-    // 현재 조회수를 가져오기
-    const currentPost = await db
-      .select({ views: posts.views })
-      .from(posts)
+    await db
+      .update(posts)
+      .set({ 
+        views: sql`COALESCE(${posts.views}, 0) + 1` // db.raw 대신 sql 사용
+      })
       .where(eq(posts.id, postId))
-      .limit(1)
-
-    if (currentPost.length > 0) {
-      const currentViews = currentPost[0].views || 0
-      
-      // 조회수 증가
-      await db
-        .update(posts)
-        .set({ views: currentViews + 1 })
-        .where(eq(posts.id, postId))
-    }
   } catch (error) {
     console.error('조회수 업데이트 실패:', error)
   }
@@ -38,6 +30,7 @@ async function getPost(id: number) {
       author: posts.author,
       views: posts.views,
       createdAt: posts.createdAt,
+      updatedAt: posts.updatedAt,
       board: {
         id: boards.id,
         title: boards.title,
@@ -74,7 +67,7 @@ export default async function PostPage({ params }: PageProps) {
   }
 
   // 조회수 증가 (비동기로 실행)
-  incrementViewsAction(postId)
+  incrementViewsAction(postId).catch(console.error)
   
   const post = await getPost(postId)
 
@@ -130,12 +123,14 @@ export default async function PostPage({ params }: PageProps) {
         {/* 게시글 내용 */}
         <div className="bg-white rounded-lg shadow-sm p-8 mb-6">
           <div className="prose max-w-none">
-            <div 
-              className="whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ __html: post.content }}
-            />
-          </div>
+            <div className="whitespace-pre-wrap text-gray-800">
+              {post.content}
+            </div>
 </div>
+        </div>
+
+        {/* 댓글 섹션 */}
+        {/* <CommentSection postId={post.id} /> */}
 
         {/* 액션 버튼들 */}
         <div className="flex justify-between items-center bg-white rounded-lg shadow-sm p-6">
@@ -153,11 +148,22 @@ export default async function PostPage({ params }: PageProps) {
             >
               수정
             </Link>
-            <button className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
+            <button 
+              className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
+              onClick={() => {
+                if (confirm('정말로 삭제하시겠습니까?')) {
+                  // TODO: 삭제 기능 구현
+                  alert('삭제 기능은 아직 구현되지 않았습니다.')
+                }
+              }}
+            >
               삭제
             </button>
           </div>
 </div>
+
+        {/* PostActions 컴포넌트 (있다면) */}
+         <PostActions postId={post.id} /> 
       </div>
 </Layout>
   )
